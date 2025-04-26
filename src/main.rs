@@ -2,6 +2,7 @@ use clap::Parser;
 use dotenvy;
 use tokio;
 use tracing::{self, info};
+use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 pub mod routes;
 pub mod views;
@@ -21,8 +22,13 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
 
     // Set up tracing with the default format subscriber
-    let subscriber = tracing_subscriber::FmtSubscriber::new();
-    tracing::subscriber::set_global_default(subscriber)?;
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| format!("{}=debug,info", env!("CARGO_CRATE_NAME")).into()),
+        )
+        .init();
 
     let args = Cli::parse();
 

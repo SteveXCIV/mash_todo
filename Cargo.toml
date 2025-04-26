@@ -9,7 +9,7 @@ keywords = ["mash", "maud", "axum", "sqlx", "htmx", "todo"]
 
 [dependencies]
 anyhow = "1.0.98"
-axum = "0.8.3"
+axum = { version = "0.8.3", features = ["tracing"] }
 clap = { version = "4.5.37", features = ["derive", "env"] }
 dotenvy = "0.15.7"
 maud = { version = "0.27.0", features = ["axum"] }
@@ -18,4 +18,4 @@ sqlx = { version = "0.8.5", features = ["runtime-tokio", "sqlite"] }
 tokio = { version = "1.44.2", features = ["full"] }
 tower-http = { version = "0.6.2", features = ["fs", "trace"] }
 tracing = "0.1.41"
-tracing-subscriber = "0.3.19"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
