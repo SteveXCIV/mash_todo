@@ -1,24 +1,18 @@
 use axum::Form;
 use axum::http::StatusCode;
+use axum::response::ErrorResponse;
 use axum::{extract::State, response::Result};
 use maud::{DOCTYPE, Markup, html};
 use serde::Deserialize;
 use tracing::error;
 
 use crate::state::AppState;
-use crate::todos;
+use crate::todos::{self, Todo};
 
 pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
     let all_todos = match todos::get_all_todos(&pool).await {
         Ok(t) => t,
-        Err(e) => {
-            error!("failed to fetch todos: {:?}", e);
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "something went wrong",
-            )
-                .into());
-        }
+        Err(e) => return Err(internal_server_error(e)),
     };
 
     Ok(html! {
@@ -34,7 +28,7 @@ pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
             ul #todo-list {
                 // display todos
                 @for todo in &all_todos {
-                    li #{ "todo-" (todo.id) } { (todo.description) }
+                    (render_todo(todo))
                 }
             }
             form
@@ -67,17 +61,26 @@ pub async fn add_todo(
     let new_todo =
         match todos::add_todo(&pool, add_todo.description.to_string()).await {
             Ok(t) => t,
-            Err(e) => {
-                error!("failed to add new todo: {:?}", e);
-                return Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "something went wrong",
-                )
-                    .into());
-            }
+            Err(e) => return Err(internal_server_error(e)),
         };
 
-    Ok(html! {
-        li #{ "todo-" (new_todo.id) } { (&new_todo.description) }
-    })
+    Ok(render_todo(&new_todo))
+}
+
+fn get_todo_id(todo: &Todo) -> String {
+    format!("todo-{}", todo.id)
+}
+
+fn render_todo(todo: &Todo) -> Markup {
+    html! {
+        li #(get_todo_id(todo)) { (todo.description) }
+    }
+}
+
+fn internal_server_error<E>(error: E) -> ErrorResponse
+where
+    E: std::fmt::Debug,
+{
+    error!("internal error: {:?}", error);
+    (StatusCode::INTERNAL_SERVER_ERROR, "something went wrong").into()
 }
