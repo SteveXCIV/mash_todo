@@ -24,10 +24,9 @@ async fn main() -> anyhow::Result<()> {
     // Set up tracing with the default format subscriber
     tracing_subscriber::registry()
         .with(fmt::layer())
-        .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| format!("{}=debug,info", env!("CARGO_CRATE_NAME")).into()),
-        )
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+            format!("{}=debug,info", env!("CARGO_CRATE_NAME")).into()
+        }))
         .init();
 
     let args = Cli::parse();

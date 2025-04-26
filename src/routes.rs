@@ -16,7 +16,11 @@ pub fn create_router() -> Router {
         .route("/api/v1/thebutton", post(views::clicked_the_button))
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
+                .make_span_with(
+                    trace::DefaultMakeSpan::new().level(Level::INFO),
+                )
+                .on_response(
+                    trace::DefaultOnResponse::new().level(Level::INFO),
+                ),
         )
 }
