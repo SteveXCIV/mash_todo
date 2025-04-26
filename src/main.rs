@@ -1,11 +1,13 @@
 use clap::Parser;
 use dotenvy;
+use state::AppState;
 use tokio;
 use tracing::{self, info};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 pub mod db;
 pub mod routes;
+pub mod state;
 pub mod todos;
 pub mod views;
 
@@ -34,10 +36,13 @@ async fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
     // database
-    let _pool = db::create_pool().await?;
+    let pool = db::create_pool().await?;
+
+    // construct app dependenciess
+    let app_state = AppState { pool };
 
     // serve the app
-    let app = routes::create_router();
+    let app = routes::create_router(app_state);
     let addr = format!("{}:{}", args.bind_address, args.port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("started listener on {}", &addr);
