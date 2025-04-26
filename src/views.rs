@@ -1,4 +1,5 @@
 use axum::Form;
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::response::ErrorResponse;
 use axum::{extract::State, response::Result};
@@ -67,13 +68,39 @@ pub async fn add_todo(
     Ok(render_todo(&new_todo))
 }
 
+pub async fn toggle_todo(
+    State(AppState { pool }): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<Markup> {
+    match todos::toggle_todo(&pool, id).await {
+        Ok(t) => Ok(render_todo(&t)),
+        Err(e) => Err(internal_server_error(e)),
+    }
+}
+
 fn get_todo_id(todo: &Todo) -> String {
     format!("todo-{}", todo.id)
 }
 
 fn render_todo(todo: &Todo) -> Markup {
+    let id = get_todo_id(todo);
     html! {
-        li #(get_todo_id(todo)) { (todo.description) }
+        li #(&id) {
+            input
+                hx-put={"/api/v1/todos/" (todo.id) "/toggle"}
+                hx-target={"#" (&id)}
+                hx-swap="outerHTML"
+                type="checkbox"
+                name={"toggle-" (todo.id)}
+                checked[todo.is_completed()];
+            label for={"toggle-" (todo.id)} {
+                @if todo.is_completed() {
+                    s { (todo.description) }
+                } @else {
+                    (todo.description)
+                }
+            }
+        }
     }
 }
 

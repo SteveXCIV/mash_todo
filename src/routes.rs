@@ -1,7 +1,7 @@
 use crate::{state::AppState, views};
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{get, post, put},
 };
 use tower_http::{
     services::ServeDir,
@@ -16,6 +16,7 @@ pub fn create_router(state: AppState) -> Router {
         .nest_service("/public", ServeDir::new("public"))
         .route("/", get(views::home))
         .route("/api/v1/todos", post(views::add_todo))
+        .route("/api/v1/todos/{id}/toggle", put(views::toggle_todo))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(

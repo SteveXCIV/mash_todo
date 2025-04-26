@@ -8,6 +8,12 @@ pub struct Todo {
     pub completed_at: Option<i64>,
 }
 
+impl Todo {
+    pub fn is_completed(&self) -> bool {
+        self.completed_at.is_some()
+    }
+}
+
 pub async fn get_all_todos(pool: &SqlitePool) -> anyhow::Result<Vec<Todo>> {
     let todos = query_as::<_, Todo>("SELECT * FROM todos ORDER BY id")
         .fetch_all(pool)
@@ -31,24 +37,38 @@ pub async fn add_todo(
     })
 }
 
-pub async fn complete_todo(pool: &SqlitePool, id: i64) -> anyhow::Result<Todo> {
-    let completed_at =
-        SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as i64;
-    // update the database row
-    query("UPDATE todos SET completed_at = (?1) WHERE id = (?2)")
-        .bind(completed_at)
+pub async fn toggle_todo(pool: &SqlitePool, id: i64) -> anyhow::Result<Todo> {
+    // open a new transaction
+    let mut tx = pool.begin().await?;
+
+    // fetch existing todo
+    let mut todo: Todo = query_as("SELECT * FROM todos WHERE id = (?1)")
         .bind(id)
-        .execute(pool)
+        .fetch_one(&mut *tx)
         .await?;
-    // fetch the description so we can construct a response
-    let description: String =
-        query_scalar("SELECT description FROM todos WHERE id = (?1)")
+
+    if todo.is_completed() {
+        // uncomplete the todo
+        query("UPDATE todos SET completed_at = NULL WHERE id = (?1)")
             .bind(id)
-            .fetch_one(pool)
+            .execute(&mut *tx)
             .await?;
-    Ok(Todo {
-        id,
-        description,
-        completed_at: Some(completed_at),
-    })
+        todo.completed_at = None;
+    } else {
+        let completed_at =
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as i64;
+
+        // update the database row
+        query("UPDATE todos SET completed_at = (?1) WHERE id = (?2)")
+            .bind(completed_at)
+            .bind(id)
+            .execute(&mut *tx)
+            .await?;
+        todo.completed_at = Some(completed_at);
+    }
+
+    // close the transaction (important!)
+    tx.commit().await?;
+
+    Ok(todo)
 }
