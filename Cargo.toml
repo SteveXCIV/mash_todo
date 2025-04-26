@@ -12,7 +12,7 @@ anyhow = "1.0.98"
 axum = "0.8.3"
 clap = { version = "4.5.37", features = ["derive", "env"] }
 dotenvy = "0.15.7"
-maud = "0.27.0"
+maud = { version = "0.27.0", features = ["axum"] }
 serde = { version = "1.0.219", features = ["derive"] }
 sqlx = { version = "0.8.5", features = ["runtime-tokio", "sqlite"] }
 tokio = { version = "1.44.2", features = ["full"] }
