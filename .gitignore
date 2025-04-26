@@ -1,3 +1,6 @@
 /target
 
 .env
+
+db/*
+!db/.gitkeep
