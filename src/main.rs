@@ -4,7 +4,9 @@ use tokio;
 use tracing::{self, info};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
+pub mod db;
 pub mod routes;
+pub mod todos;
 pub mod views;
 
 #[derive(Parser)]
@@ -30,6 +32,9 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let args = Cli::parse();
+
+    // database
+    let _pool = db::create_pool().await?;
 
     // serve the app
     let app = routes::create_router();
