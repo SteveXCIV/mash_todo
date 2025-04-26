@@ -1,7 +1,11 @@
 [package]
 name = "mash_todo"
+description = "A simple TODO app written on the MASH stack."
+authors = ["Steve Troetti (@stevexciv)"]
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+keywords = ["mash", "maud", "axum", "sqlx", "htmx", "todo"]
 
 [dependencies]
 anyhow = "1.0.98"
