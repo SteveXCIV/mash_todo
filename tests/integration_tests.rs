@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use axum::{
     Router,
     body::Body,
@@ -9,7 +9,7 @@ use http_body_util::BodyExt;
 use mash_todo::{
     db::create_pool, routes::create_router, state::AppState, views::AddTodoForm,
 };
-use scraper::Html;
+use scraper::{Html, Selector};
 use serde::Serialize;
 use tower::ServiceExt;
 
@@ -76,7 +76,27 @@ async fn test_add_todo() -> Result<()> {
 
     assert_eq!(response.status(), 200);
     let actual_html = response.html().await?;
-    println!("{actual_html:?}");
+    let list_extractor =
+        Selector::parse("ul#todo-list > li").map_err(|e| anyhow!("{:?}", e))?;
+    let list_items: Vec<_> = actual_html.select(&list_extractor).collect();
+    assert_eq!(
+        list_items.len(),
+        1,
+        "There should be one todo item in the list"
+    );
+    let label = {
+        let s = Selector::parse("label").map_err(|e| anyhow!("{:?}", e))?;
+        list_items[0].select(&s).next().unwrap()
+    };
+    assert_eq!(label.text().collect::<Vec<_>>(), vec!["Buy potatoes"]);
+    let input = {
+        let s = Selector::parse("input[type=checkbox]")
+            .map_err(|e| anyhow!("{:?}", e))?;
+        list_items[0].select(&s).next().unwrap()
+    };
+    assert_eq!(input.value().attr("hx-put"), Some("/api/v1/todos/1/toggle"));
+    assert_eq!(input.value().attr("hx-target"), Some("#todo-1"));
+    assert_eq!(input.value().attr("hx-swap"), Some("outerHTML"));
 
     Ok(())
 }
