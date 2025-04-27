@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 use axum::response::ErrorResponse;
 use axum::{extract::State, response::Result};
 use maud::{DOCTYPE, Markup, html};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tracing::error;
 
 use crate::state::AppState;
@@ -76,7 +76,7 @@ pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
     })
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct AddTodoForm {
     pub description: String,
 }
