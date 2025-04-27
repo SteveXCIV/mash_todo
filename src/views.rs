@@ -20,31 +20,51 @@ pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
         (DOCTYPE)
         head {
             title { "Mash Todos" }
+            meta name="viewport" content="width=device-width, initial-scale=1" {}
+            link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>" {}
+            link rel="stylesheet" href="/public/css/bulma_1.0.4/bulma.min.css" {}
+            link rel="stylesheet" href="/public/css/app.css" {}
             script src="/public/js/htmx_2.0.4/htmx.min.js" type="text/javascript" {}
         }
         body {
-            h1 { "Mash Todos" }
-            br;
+            section .section {
+                div .container {
+                    h1 .title { "Mash Todos" }
+                    br;
 
-            ul #todo-list {
-                // display todos
-                @for todo in &all_todos {
-                    (render_todo(todo))
+                    div .is-size-4 {
+                        ul #todo-list {
+                            // display todos
+                            @for todo in &all_todos {
+                                (render_todo(todo))
+                            }
+                        }
+                        form .pt-4
+                            hx-post="/api/v1/todos"
+                            hx-target="#todo-list"
+                            hx-swap="beforeend"
+                            hx-on::after-request="if(event.detail.successful) this.reset()"
+                        {
+                            input .input .is-medium
+                                type="text"
+                                id="description"
+                                name="description"
+                                placeholder="What do you need to do?"
+                                title="Add a new item to your todo list"
+                                required;
+                            input type="submit" tabindex="-1" hidden;
+                        }
+                    }
                 }
             }
-            form
-                hx-post="/api/v1/todos"
-                hx-target="#todo-list"
-                hx-swap="beforeend"
-                hx-on::after-request="if(event.detail.successful) this.reset()"
-            {
-                input
-                    type="text"
-                    id="description"
-                    name="description"
-                    placeholder="What do you need to do?"
-                    required;
-                input type="submit" tabindex="-1" hidden;
+
+            footer .footer {
+                div .content.has-text-centered {
+                    p {
+                        "Made with ☕, 🦀, and ❤️ by "
+                        a href="github.com/SteveXCIV" { "@stevexciv" }
+                    }
+                }
             }
         }
     })
@@ -86,14 +106,13 @@ fn render_todo(todo: &Todo) -> Markup {
     let id = get_todo_id(todo);
     html! {
         li #(&id) {
-            input
-                hx-put={"/api/v1/todos/" (todo.id) "/toggle"}
-                hx-target={"#" (&id)}
-                hx-swap="outerHTML"
-                type="checkbox"
-                name={"toggle-" (todo.id)}
-                checked[todo.is_completed()];
-            label for={"toggle-" (todo.id)} {
+            label .checkbox {
+                input .big-checkbox .mr-4
+                    hx-put={"/api/v1/todos/" (todo.id) "/toggle"}
+                    hx-target={"#" (&id)}
+                    hx-swap="outerHTML"
+                    type="checkbox"
+                    checked[todo.is_completed()];
                 @if todo.is_completed() {
                     s { (todo.description) }
                 } @else {

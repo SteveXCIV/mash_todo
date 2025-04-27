@@ -1,0 +1,14 @@
+/* forcing the footer to actually be on the bottom of the page  */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+footer {
+  margin-top: auto;
+}
+
+.big-checkbox {
+  transform: scale(1.5);
+}

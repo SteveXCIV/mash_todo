@@ -1,4 +1,4 @@
-use sqlx::{SqlitePool, query, query_as, query_scalar};
+use sqlx::{SqlitePool, query, query_as};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(sqlx::FromRow)]
