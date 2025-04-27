@@ -64,6 +64,12 @@ pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
                         "Made with ☕, 🦀, and ❤️ by "
                         a href="github.com/SteveXCIV" { "@stevexciv" }
                     }
+                    p .is-size-7 .has-text-grey {
+                        "This project is open source under either the MIT or Apache-2.0 licenses."
+                        " Find it "
+                        a href="https://github.com/SteveXCIV/mash_todo" { "on GitHub"}
+                        "."
+                    }
                 }
             }
         }
