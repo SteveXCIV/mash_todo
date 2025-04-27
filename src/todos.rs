@@ -72,3 +72,78 @@ pub async fn toggle_todo(pool: &SqlitePool, id: i64) -> anyhow::Result<Todo> {
 
     Ok(todo)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::create_pool;
+    use std::collections::HashSet;
+
+    async fn get_pool() -> SqlitePool {
+        create_pool("sqlite::memory:")
+            .await
+            .expect("failed to create pool")
+    }
+
+    #[tokio::test]
+    async fn test_get_all_todos_empty() {
+        let pool = get_pool().await;
+
+        let todos = get_all_todos(&pool).await.unwrap();
+
+        assert!(todos.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_all_todos() {
+        let pool = get_pool().await;
+
+        add_todo(&pool, "Buy milk".to_string()).await.unwrap();
+        add_todo(&pool, "Buy eggs".to_string()).await.unwrap();
+        add_todo(&pool, "Make breakfast".to_string()).await.unwrap();
+        let todos = get_all_todos(&pool).await.unwrap();
+
+        assert_eq!(3, todos.len());
+        let descriptions = todos
+            .into_iter()
+            .map(|t| t.description)
+            .collect::<HashSet<_>>();
+        assert_eq!(
+            descriptions,
+            HashSet::from([
+                "Buy milk".to_string(),
+                "Buy eggs".to_string(),
+                "Make breakfast".to_string()
+            ])
+        );
+    }
+
+    #[tokio::test]
+    async fn test_add_todo() {
+        let pool = get_pool().await;
+
+        let todo = add_todo(&pool, "Buy milk".to_string()).await.unwrap();
+
+        assert_eq!(todo.description, "Buy milk");
+        assert!(todo.completed_at.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_toggle_todo() {
+        let pool = get_pool().await;
+
+        let mut todo = add_todo(&pool, "Buy milk".to_string()).await.unwrap();
+        todo = toggle_todo(&pool, todo.id).await.unwrap();
+
+        assert!(todo.is_completed());
+    }
+
+    #[tokio::test]
+    async fn test_toggle_nonexistent_todo() {
+        let pool = get_pool().await;
+
+        let result = toggle_todo(&pool, 999).await;
+
+        assert!(result.is_err());
+    }
+}
