@@ -6,6 +6,11 @@ A simple example application (TODO list) built on the MASH stack.
 
 There will be a "how I built this" blog post accompanying this project soon.
 
+In the meantime, check out a couple of other great resources on the MASH stack:
+
+- A [homepage](https://yree.io/mash/) for the MASH stack by [Shantanu Mishra](https://github.com/8hantanu)
+- A [blog post](https://emschwartz.me/building-a-fast-website-with-the-mash-stack-in-rust/) about the stack by [Evan Schwartz](https://github.com/emschwartz/)
+
 ## Running
 
 You'll need the Cargo build tool. It's part of the Rust toolchain.
