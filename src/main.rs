@@ -1,15 +1,9 @@
 use clap::Parser;
 use dotenvy;
-use state::AppState;
+use mash_todo::{db, routes, state::AppState};
 use tokio;
 use tracing::{self, info};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
-
-pub mod db;
-pub mod routes;
-pub mod state;
-pub mod todos;
-pub mod views;
 
 #[derive(Parser)]
 struct Cli {
