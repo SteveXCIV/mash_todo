@@ -53,7 +53,7 @@ The application embeds the migrations automatically so they don't need to be man
 If you're interested in knowing more, check out the [SQLx CLI tool](https://github.com/launchbadge/sqlx/tree/main/sqlx-cli).
 
 The `public/` directory contains vendored front-end libraries (htmx and Bulma at the moment), as well as some minor CSS tweaks I wrote.
-The htmx docs have a good writeup on reasons to reconsider CDNs.
+The htmx docs link to [a good writeup](https://blog.wesleyac.com/posts/why-not-javascript-cdn) on reasons to reconsider CDNs.
 I specifically chose to forego a CDN distribution to test MASH stack's ergonomics in this area.
 
 The Rust source code is all under `src/`.
