@@ -1,5 +1,7 @@
 # MASH Stack TODO App
 
+![A screenshot of the completed application viewed on a mobile phone.](./screenshot.webp)
+
 A simple example application (TODO list) built on the MASH stack.
 
 There will be a "how I built this" blog post accompanying this project soon.
