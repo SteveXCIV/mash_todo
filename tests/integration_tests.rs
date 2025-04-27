@@ -65,7 +65,7 @@ impl ResponseExt for Response {
 }
 
 #[tokio::test]
-async fn test_add_todo() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_add_todo() -> Result<()> {
     let router = create_router_for_test().await;
 
     let response = router
@@ -75,7 +75,7 @@ async fn test_add_todo() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     assert_eq!(response.status(), 200);
-    let actual_html = response.html().await;
+    let actual_html = response.html().await?;
     println!("{actual_html:?}");
 
     Ok(())
