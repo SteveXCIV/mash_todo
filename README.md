@@ -35,6 +35,13 @@ cargo run -- --help
 
 Optionally include a `.env` file in the working directory to specify env vars.
 
+### Compatibility Notes
+
+I have personally tested this app on Firefox and Chromium and have had no noticable issues.
+Testing was done on an `x86_64` machine running Fedora Linux and an M1 Mac running macOS Sequoia.
+I don't own a Windows machine so YMMV on that platform.
+If anyone reading this has had success running on Windows please let me know and I'll update the notes.
+
 ## Repository Structure
 
 You'll see a `db/.gitkeep` file at the top of the directory; this is there to force the
