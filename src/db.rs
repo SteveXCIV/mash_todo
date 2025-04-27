@@ -7,9 +7,9 @@ use sqlx::{
 // Embeds all ./migrations into the application binary
 static MIGRATOR: Migrator = sqlx::migrate!();
 
-pub async fn create_pool() -> Result<SqlitePool, Error> {
+pub async fn create_pool(connection_string: &str) -> Result<SqlitePool, Error> {
     let pool = SqlitePool::connect_with(
-        SqliteConnectOptions::from_str("sqlite://db/app.db")?
+        SqliteConnectOptions::from_str(connection_string)?
             .create_if_missing(true),
     )
     .await?;

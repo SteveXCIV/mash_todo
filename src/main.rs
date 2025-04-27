@@ -18,6 +18,9 @@ struct Cli {
 
     #[arg(short, long = "port", env = "PORT", default_value_t = 3000)]
     port: u16,
+
+    #[arg(short = 'd', long = "database-url", env = "DATABASE_URL", default_value_t = String::from("sqlite://db/app.db"))]
+    database_url: String,
 }
 
 #[tokio::main]
@@ -36,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
 
     // database
-    let pool = db::create_pool().await?;
+    let pool = db::create_pool(&args.database_url).await?;
 
     // construct app dependenciess
     let app_state = AppState { pool };
