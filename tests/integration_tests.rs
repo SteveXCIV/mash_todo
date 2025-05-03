@@ -7,7 +7,8 @@ use axum::{
 };
 use http_body_util::BodyExt;
 use mash_todo::{
-    db::create_pool, routes::create_router, state::AppState, views::AddTodoForm,
+    db::create_pool, handlers::AddTodoForm, routes::create_router,
+    state::AppState,
 };
 use scraper::{Html, Selector};
 use serde::Serialize;

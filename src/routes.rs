@@ -1,4 +1,4 @@
-use crate::{state::AppState, views};
+use crate::{handlers, state::AppState};
 use axum::{
     Router,
     routing::{get, post, put},
@@ -14,9 +14,9 @@ pub fn create_router(state: AppState) -> Router {
     // see this page for details: https://docs.rs/axum/0.8.3/axum/routing/struct.Router.html#method.with_state
     Router::new()
         .nest_service("/public", ServeDir::new("public"))
-        .route("/", get(views::home))
-        .route("/api/v1/todos", post(views::add_todo))
-        .route("/api/v1/todos/{id}/toggle", put(views::toggle_todo))
+        .route("/", get(handlers::home))
+        .route("/api/v1/todos", post(handlers::add_todo))
+        .route("/api/v1/todos/{id}/toggle", put(handlers::toggle_todo))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(

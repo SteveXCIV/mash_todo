@@ -1,22 +1,8 @@
-use axum::Form;
-use axum::extract::Path;
-use axum::http::StatusCode;
-use axum::response::ErrorResponse;
-use axum::{extract::State, response::Result};
+use crate::todos::Todo;
 use maud::{DOCTYPE, Markup, html};
-use serde::{Deserialize, Serialize};
-use tracing::error;
 
-use crate::state::AppState;
-use crate::todos::{self, Todo};
-
-pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
-    let all_todos = match todos::get_all_todos(&pool).await {
-        Ok(t) => t,
-        Err(e) => return Err(internal_server_error(e)),
-    };
-
-    Ok(html! {
+pub fn render_home(all_todos: Vec<Todo>) -> Markup {
+    html! {
         (DOCTYPE)
         head {
             title { "Mash Todos" }
@@ -73,42 +59,10 @@ pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
                 }
             }
         }
-    })
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct AddTodoForm {
-    pub description: String,
-}
-
-pub async fn add_todo(
-    State(AppState { pool }): State<AppState>,
-    Form(add_todo): Form<AddTodoForm>,
-) -> Result<Markup> {
-    let new_todo =
-        match todos::add_todo(&pool, add_todo.description.to_string()).await {
-            Ok(t) => t,
-            Err(e) => return Err(internal_server_error(e)),
-        };
-
-    Ok(render_todo(&new_todo))
-}
-
-pub async fn toggle_todo(
-    State(AppState { pool }): State<AppState>,
-    Path(id): Path<i64>,
-) -> Result<Markup> {
-    match todos::toggle_todo(&pool, id).await {
-        Ok(t) => Ok(render_todo(&t)),
-        Err(e) => Err(internal_server_error(e)),
     }
 }
 
-fn get_todo_id(todo: &Todo) -> String {
-    format!("todo-{}", todo.id)
-}
-
-fn render_todo(todo: &Todo) -> Markup {
+pub fn render_todo(todo: &Todo) -> Markup {
     let id = get_todo_id(todo);
     html! {
         li #(&id) {
@@ -129,10 +83,6 @@ fn render_todo(todo: &Todo) -> Markup {
     }
 }
 
-fn internal_server_error<E>(error: E) -> ErrorResponse
-where
-    E: std::fmt::Debug,
-{
-    error!("internal error: {:?}", error);
-    (StatusCode::INTERNAL_SERVER_ERROR, "something went wrong").into()
+fn get_todo_id(todo: &Todo) -> String {
+    format!("todo-{}", todo.id)
 }
