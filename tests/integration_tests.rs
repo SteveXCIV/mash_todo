@@ -92,3 +92,123 @@ pub async fn test_add_todo() -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+pub async fn test_toggle_todo() -> Result<()> {
+    let mut router = create_router_for_test().await;
+
+    // First, add a todo
+    let response_add = router
+        .as_service()
+        .oneshot(Request::post("/api/v1/todos").form(AddTodoForm {
+            description: "Buy potatoes".to_string(),
+        })?)
+        .await?;
+    assert_eq!(response_add.status(), 200);
+    let added_todo_html = response_add.html().await?;
+    let checkbox = {
+        let s = Selector::parse("input[type=checkbox]")
+            .map_err(|e| anyhow!("{:?}", e))?;
+        added_todo_html.select(&s).next().unwrap()
+    };
+    assert_eq!(
+        checkbox.value().attr("hx-put"),
+        Some("/api/v1/todos/1/toggle")
+    );
+    assert_eq!(checkbox.value().attr("hx-target"), Some("#todo-1"));
+    assert_eq!(checkbox.value().attr("hx-swap"), Some("outerHTML"));
+
+    // Now, toggle the todo
+    let response_toggle = router
+        .as_service()
+        .oneshot(Request::put("/api/v1/todos/1/toggle").form(AddTodoForm {
+            description: "Buy potatoes".to_string(),
+        })?)
+        .await?;
+
+    assert_eq!(response_toggle.status(), 200);
+    let toggled_todo_html = response_toggle.html().await?;
+    let checkbox_toggled = {
+        let s = Selector::parse("input[type=checkbox]")
+            .map_err(|e| anyhow!("{:?}", e))?;
+        toggled_todo_html.select(&s).next().unwrap()
+    };
+    assert_eq!(
+        checkbox_toggled.value().attr("hx-put"),
+        Some("/api/v1/todos/1/toggle")
+    );
+    assert_eq!(checkbox_toggled.value().attr("hx-target"), Some("#todo-1"));
+    assert_eq!(checkbox_toggled.value().attr("hx-swap"), Some("outerHTML"));
+    assert!(checkbox_toggled.attr("checked").is_some());
+
+    Ok(())
+}
+
+#[tokio::test]
+pub async fn test_add_two_todos() -> Result<()> {
+    let mut router = create_router_for_test().await;
+
+    // First, add the first todo
+    let response_first_todo = router
+        .as_service()
+        .oneshot(Request::post("/api/v1/todos").form(AddTodoForm {
+            description: "Buy potatoes".to_string(),
+        })?)
+        .await?;
+
+    assert_eq!(response_first_todo.status(), 200);
+    let first_todo_html = response_first_todo.html().await?;
+    let label_first = {
+        let s = Selector::parse("label").map_err(|e| anyhow!("{:?}", e))?;
+        first_todo_html.select(&s).next().unwrap()
+    };
+    assert_eq!(label_first.text().collect::<Vec<_>>(), vec!["Buy potatoes"]);
+
+    // Now, add the second todo
+    let response_second_todo = router
+        .as_service()
+        .oneshot(Request::post("/api/v1/todos").form(AddTodoForm {
+            description: "Clean dishes".to_string(),
+        })?)
+        .await?;
+
+    assert_eq!(response_second_todo.status(), 200);
+    let second_todo_html = response_second_todo.html().await?;
+    let label_second = {
+        let s = Selector::parse("label").map_err(|e| anyhow!("{:?}", e))?;
+        second_todo_html.select(&s).next().unwrap()
+    };
+    assert_eq!(
+        label_second.text().collect::<Vec<_>>(),
+        vec!["Clean dishes"]
+    );
+
+    // Verify both todos are in the list
+    let response_list = router
+        .as_service()
+        .oneshot(Request::get("/").body(Body::empty())?)
+        .await?;
+    assert_eq!(response_list.status(), 200);
+    let home_html = response_list.html().await?;
+    let labels = {
+        let s = Selector::parse("ul#todo-list > li > label")
+            .map_err(|e| anyhow!("{:?}", e))?;
+        home_html.select(&s).collect::<Vec<_>>()
+    };
+
+    let mut found_first_todo = false;
+    let mut found_second_todo = false;
+
+    for label in labels {
+        if label.text().collect::<Vec<_>>()[0] == "Buy potatoes" {
+            found_first_todo = true;
+        } else if label.text().collect::<Vec<_>>()[0] == "Clean dishes" {
+            found_second_todo = true;
+        }
+    }
+
+    assert!(found_first_todo, "First todo was not found in the list");
+    assert!(found_second_todo, "Second todo was not found in the list");
+
+    Ok(())
+}
