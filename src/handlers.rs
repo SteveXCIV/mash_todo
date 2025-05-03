@@ -1,20 +1,23 @@
-use crate::{state::AppState, todos, views};
+use crate::{
+    state::AppState,
+    todos::{self, Todo},
+    views::{Home, Result},
+};
 use axum::{
     Form,
     extract::{Path, State},
     http::StatusCode,
-    response::{ErrorResponse, Result},
+    response::ErrorResponse,
 };
-use maud::Markup;
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
-pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Markup> {
+pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Home> {
     let all_todos = match todos::get_all_todos(&pool).await {
         Ok(t) => t,
         Err(e) => return Err(internal_server_error(e)),
     };
-    Ok(views::render_home(all_todos))
+    Ok(Home(all_todos).into())
 }
 
 #[derive(Deserialize, Serialize)]
@@ -25,22 +28,22 @@ pub struct AddTodoForm {
 pub async fn add_todo(
     State(AppState { pool }): State<AppState>,
     Form(add_todo): Form<AddTodoForm>,
-) -> Result<Markup> {
+) -> Result<Todo> {
     let new_todo =
         match todos::add_todo(&pool, add_todo.description.to_string()).await {
             Ok(t) => t,
             Err(e) => return Err(internal_server_error(e)),
         };
 
-    Ok(views::render_todo(&new_todo))
+    Ok(new_todo.into())
 }
 
 pub async fn toggle_todo(
     State(AppState { pool }): State<AppState>,
     Path(id): Path<i64>,
-) -> Result<Markup> {
+) -> Result<Todo> {
     match todos::toggle_todo(&pool, id).await {
-        Ok(t) => Ok(views::render_todo(&t)),
+        Ok(todo) => Ok(todo.into()),
         Err(e) => Err(internal_server_error(e)),
     }
 }
