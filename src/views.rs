@@ -46,7 +46,7 @@ impl Render for Home {
                             ul #todo-list {
                                 // display todos
                                 @for todo in self.0.iter() {
-                                    (todo.render())
+                                    (render_todo(todo))
                                 }
                             }
                             form .pt-4
@@ -87,23 +87,37 @@ impl Render for Home {
     }
 }
 
-impl Render for Todo {
+pub struct AddedTodo(pub Todo);
+
+impl Render for AddedTodo {
     fn render(&self) -> Markup {
-        let id = format!("todo-{}", self.id);
-        html! {
-            li #(&id) {
-                label .checkbox {
-                    input .big-checkbox .mr-4
-                        hx-put={"/api/v1/todos/" (self.id) "/toggle"}
-                        hx-target={"#" (&id)}
-                        hx-swap="outerHTML"
-                        type="checkbox"
-                        checked[self.is_completed()];
-                    @if self.is_completed() {
-                        s { (self.description) }
-                    } @else {
-                        (self.description)
-                    }
+        render_todo(&self.0)
+    }
+}
+
+pub struct ToggledTodo(pub Todo);
+
+impl Render for ToggledTodo {
+    fn render(&self) -> Markup {
+        render_todo(&self.0)
+    }
+}
+
+fn render_todo(todo: &Todo) -> Markup {
+    let id = format!("todo-{}", todo.id);
+    html! {
+        li #(&id) {
+            label .checkbox {
+                input .big-checkbox .mr-4
+                    hx-put={"/api/v1/todos/" (todo.id) "/toggle"}
+                    hx-target={"#" (&id)}
+                    hx-swap="outerHTML"
+                    type="checkbox"
+                    checked[todo.is_completed()];
+                @if todo.is_completed() {
+                    s { (todo.description) }
+                } @else {
+                    (todo.description)
                 }
             }
         }

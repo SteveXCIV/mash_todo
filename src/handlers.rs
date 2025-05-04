@@ -1,7 +1,7 @@
 use crate::{
     state::AppState,
-    todos::{self, Todo},
-    views::{Home, Result},
+    todos,
+    views::{AddedTodo, Home, Result, ToggledTodo},
 };
 use axum::{
     Form,
@@ -28,22 +28,22 @@ pub struct AddTodoForm {
 pub async fn add_todo(
     State(AppState { pool }): State<AppState>,
     Form(add_todo): Form<AddTodoForm>,
-) -> Result<Todo> {
+) -> Result<AddedTodo> {
     let new_todo =
         match todos::add_todo(&pool, add_todo.description.to_string()).await {
             Ok(t) => t,
             Err(e) => return Err(internal_server_error(e)),
         };
 
-    Ok(new_todo.into())
+    Ok(AddedTodo(new_todo).into())
 }
 
 pub async fn toggle_todo(
     State(AppState { pool }): State<AppState>,
     Path(id): Path<i64>,
-) -> Result<Todo> {
+) -> Result<ToggledTodo> {
     match todos::toggle_todo(&pool, id).await {
-        Ok(todo) => Ok(todo.into()),
+        Ok(todo) => Ok(ToggledTodo(todo).into()),
         Err(e) => Err(internal_server_error(e)),
     }
 }
