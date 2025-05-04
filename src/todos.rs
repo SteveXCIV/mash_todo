@@ -15,11 +15,13 @@ impl Todo {
     }
 }
 
-#[allow(async_fn_in_trait)]
-pub trait TodoDao {
-    async fn get_all_todos(&self) -> Result<Vec<Todo>>;
-    async fn add_todo(&self, description: String) -> Result<Todo>;
-    async fn toggle_todo(&self, id: i64) -> Result<Todo>;
+pub trait TodoDao: Clone + Send + Sync + 'static {
+    fn get_all_todos(&self) -> impl Future<Output = Result<Vec<Todo>>>;
+    fn add_todo(
+        &self,
+        description: String,
+    ) -> impl Future<Output = Result<Todo>>;
+    fn toggle_todo(&self, id: i64) -> impl Future<Output = Result<Todo>>;
 }
 
 #[derive(Clone, Debug)]

@@ -1,5 +1,5 @@
 use crate::{
-    todos::{TodoDao, TodoSqliteDao},
+    todos::TodoDao,
     views::{AddedTodo, Home, Result, ToggledTodo},
 };
 use axum::{
@@ -11,7 +11,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
-pub async fn home(State(dao): State<TodoSqliteDao>) -> Result<Home> {
+pub async fn home<T: TodoDao>(State(dao): State<T>) -> Result<Home> {
     let all_todos = match dao.get_all_todos().await {
         Ok(t) => t,
         Err(e) => return Err(internal_server_error(e)),
@@ -24,8 +24,8 @@ pub struct AddTodoForm {
     pub description: String,
 }
 
-pub async fn add_todo(
-    State(dao): State<TodoSqliteDao>,
+pub async fn add_todo<T: TodoDao>(
+    State(dao): State<T>,
     Form(add_todo): Form<AddTodoForm>,
 ) -> Result<AddedTodo> {
     let new_todo = match dao.add_todo(add_todo.description.to_string()).await {
@@ -36,8 +36,8 @@ pub async fn add_todo(
     Ok(AddedTodo(new_todo).into())
 }
 
-pub async fn toggle_todo(
-    State(dao): State<TodoSqliteDao>,
+pub async fn toggle_todo<T: TodoDao>(
+    State(dao): State<T>,
     Path(id): Path<i64>,
 ) -> Result<ToggledTodo> {
     match dao.toggle_todo(id).await {
