@@ -1,6 +1,6 @@
 use clap::Parser;
 use dotenvy;
-use mash_todo::{db, routes, state::AppState};
+use mash_todo::{db, routes, state::AppState, todos::TodoSqliteDao};
 use tokio;
 use tracing::{self, info};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
     let pool = db::create_pool(&args.database_url).await?;
 
     // construct app dependenciess
-    let app_state = AppState { pool };
+    let app_state = AppState::new(TodoSqliteDao::new(pool));
 
     // serve the app
     let app = routes::create_router(app_state);

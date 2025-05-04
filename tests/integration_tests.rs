@@ -8,7 +8,7 @@ use axum::{
 use http_body_util::BodyExt;
 use mash_todo::{
     db::create_pool, handlers::AddTodoForm, routes::create_router,
-    state::AppState,
+    state::AppState, todos::TodoSqliteDao,
 };
 use scraper::{Html, Selector};
 use serde::Serialize;
@@ -16,7 +16,8 @@ use tower::ServiceExt;
 
 async fn create_router_for_test() -> Router {
     let pool = create_pool("sqlite::memory:").await.unwrap();
-    let app_state = AppState { pool };
+    let dao = TodoSqliteDao::new(pool);
+    let app_state = AppState::new(dao);
     create_router(app_state)
 }
 

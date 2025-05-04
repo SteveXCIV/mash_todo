@@ -1,6 +1,6 @@
 use crate::{
     state::AppState,
-    todos,
+    todos::TodoDao,
     views::{AddedTodo, Home, Result, ToggledTodo},
 };
 use axum::{
@@ -12,8 +12,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
-pub async fn home(State(AppState { pool }): State<AppState>) -> Result<Home> {
-    let all_todos = match todos::get_all_todos(&pool).await {
+pub async fn home(State(AppState { dao }): State<AppState>) -> Result<Home> {
+    let all_todos = match dao.get_all_todos().await {
         Ok(t) => t,
         Err(e) => return Err(internal_server_error(e)),
     };
@@ -26,23 +26,22 @@ pub struct AddTodoForm {
 }
 
 pub async fn add_todo(
-    State(AppState { pool }): State<AppState>,
+    State(AppState { dao }): State<AppState>,
     Form(add_todo): Form<AddTodoForm>,
 ) -> Result<AddedTodo> {
-    let new_todo =
-        match todos::add_todo(&pool, add_todo.description.to_string()).await {
-            Ok(t) => t,
-            Err(e) => return Err(internal_server_error(e)),
-        };
+    let new_todo = match dao.add_todo(add_todo.description.to_string()).await {
+        Ok(t) => t,
+        Err(e) => return Err(internal_server_error(e)),
+    };
 
     Ok(AddedTodo(new_todo).into())
 }
 
 pub async fn toggle_todo(
-    State(AppState { pool }): State<AppState>,
+    State(AppState { dao }): State<AppState>,
     Path(id): Path<i64>,
 ) -> Result<ToggledTodo> {
-    match todos::toggle_todo(&pool, id).await {
+    match dao.toggle_todo(id).await {
         Ok(todo) => Ok(ToggledTodo(todo).into()),
         Err(e) => Err(internal_server_error(e)),
     }

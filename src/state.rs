@@ -1,6 +1,12 @@
-use sqlx::SqlitePool;
+use crate::todos::TodoSqliteDao;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
-    pub pool: SqlitePool,
+    pub dao: TodoSqliteDao,
+}
+
+impl AppState {
+    pub fn new(dao: TodoSqliteDao) -> Self {
+        Self { dao }
+    }
 }
