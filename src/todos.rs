@@ -15,7 +15,7 @@ impl Todo {
     }
 }
 
-pub trait TodoDao: Clone + Send + Sync + 'static {
+pub trait TodoDao: Clone {
     fn get_all_todos(&self) -> impl Future<Output = Result<Vec<Todo>>>;
     fn add_todo(
         &self,
