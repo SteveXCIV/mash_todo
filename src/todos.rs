@@ -2,7 +2,10 @@ use anyhow::Result;
 use sqlx::{SqlitePool, query, query_as};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(sqlx::FromRow)]
+#[cfg(test)]
+use mockall::automock;
+
+#[derive(sqlx::FromRow, PartialEq, Eq, Clone, Debug)]
 pub struct Todo {
     pub id: i64,
     pub description: String,
@@ -10,12 +13,24 @@ pub struct Todo {
 }
 
 impl Todo {
+    pub fn new<S>(id: i64, description: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self {
+            id,
+            description: description.into(),
+            completed_at: None,
+        }
+    }
+
     pub fn is_completed(&self) -> bool {
         self.completed_at.is_some()
     }
 }
 
-pub trait TodoDao: Clone {
+#[cfg_attr(test, automock)]
+pub trait TodoDao {
     fn get_all_todos(&self) -> impl Future<Output = Result<Vec<Todo>>>;
     fn add_todo(
         &self,

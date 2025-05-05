@@ -1,20 +1,22 @@
 use crate::todos::Todo;
 use axum::response::{IntoResponse, Response, Result as AxumResult};
 use maud::{DOCTYPE, Markup, html};
+use std::fmt::Debug;
 
 pub trait Render {
     fn render(&self) -> Markup;
 }
 
-pub struct RenderResponse<T: Render>(pub T);
+#[derive(Debug)]
+pub struct RenderResponse<T: Render + Debug>(pub T);
 
-impl<T: Render> From<T> for RenderResponse<T> {
+impl<T: Render + Debug> From<T> for RenderResponse<T> {
     fn from(value: T) -> Self {
         Self(value)
     }
 }
 
-impl<T: Render> IntoResponse for RenderResponse<T> {
+impl<T: Render + Debug> IntoResponse for RenderResponse<T> {
     fn into_response(self) -> Response {
         self.0.render().into_response()
     }
@@ -22,6 +24,7 @@ impl<T: Render> IntoResponse for RenderResponse<T> {
 
 pub type Result<T> = AxumResult<RenderResponse<T>>;
 
+#[derive(PartialEq, Eq, Debug)]
 pub struct Home(pub Vec<Todo>);
 
 impl Render for Home {
@@ -87,6 +90,7 @@ impl Render for Home {
     }
 }
 
+#[derive(PartialEq, Eq, Debug)]
 pub struct AddedTodo(pub Todo);
 
 impl Render for AddedTodo {
@@ -95,6 +99,7 @@ impl Render for AddedTodo {
     }
 }
 
+#[derive(PartialEq, Eq, Debug)]
 pub struct ToggledTodo(pub Todo);
 
 impl Render for ToggledTodo {
